@@ -1,95 +1,78 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
-<script type="text/javascript" src="/static/js/slide.js"></script>
+    <script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/static/js/slide.js"></script>
 {% endblock head %}
 
 {% block center_body %}
-<div class="navbar_con">
-    <div class="navbar">
-        <h1 class="fl">校园优选分类</h1>
-        <ul class="navlist fl">
-            <li><a href="{% url 'df_goods:index' %}">首页</a></li>
-            <li class="interval">|</li>
-            <li><a href="#catalog">校园配送</a></li>
-            <li class="interval">|</li>
-            <li><a href="#service">品质保障</a></li>
-        </ul>
-    </div>
-</div>
 
-{% if sections %}
-<div class="center_con clearfix" id="catalog">
-    <ul class="subnav fl">
-        {% for section in sections %}
-        <li><a href="#{{ section.anchor }}" class="{{ section.icon_class }}">{{ section.type.ttitle }}</a></li>
-        {% endfor %}
-    </ul>
-    <div class="slide fl">
-        <ul class="slide_pics">
-            <li><img src="/static/images/slide.jpg" alt="校园鲜达活动"></li>
-            <li><img src="/static/images/slide02.jpg" alt="校园鲜达活动"></li>
-            <li><img src="/static/images/slide03.jpg" alt="校园鲜达活动"></li>
-            <li><img src="/static/images/slide04.jpg" alt="校园鲜达活动"></li>
-        </ul>
-        <div class="prev"></div>
-        <div class="next"></div>
-        <ul class="points"></ul>
-    </div>
-    <div class="adv fl">
-        <a href="#"><img src="/static/images/adv01.jpg" alt="校园优选"></a>
-        <a href="#"><img src="/static/images/adv02.jpg" alt="新鲜配送"></a>
-    </div>
-</div>
-
-{% for section in sections %}
-<div class="list_model">
-    <div class="list_title clearfix">
-        <h3 class="fl" id="{{ section.anchor }}">{{ section.type.ttitle }}</h3>
-        <div class="subtitle fl">
-            <span>|</span>
-            {% for goods in section.popular_goods %}
-            <a href="{% url 'df_goods:detail' goods.id %}">{{ goods.gtitle|slice:'10' }}</a>
-            {% empty %}
-            <span>商品正在上架</span>
-            {% endfor %}
-        </div>
-        <a href="{% url 'df_goods:good_list' section.type.id 1 1 %}" class="goods_more fr">查看更多 &gt;</a>
-    </div>
-    <div class="goods_con clearfix">
-        <div class="goods_banner fl"><img src="/static/images/{{ section.banner }}" alt="{{ section.type.ttitle }}"></div>
-        <ul class="goods_list fl">
-            {% for goods in section.latest_goods %}
-            <li>
-                <h4><a href="{% url 'df_goods:detail' goods.id %}">{{ goods.gtitle }}</a></h4>
-                <a href="{% url 'df_goods:detail' goods.id %}"><img src="{{ MEDIA_URL }}{{ goods.gpic }}" alt="{{ goods.gtitle }}"></a>
-                <div class="prize">￥ {{ goods.gprice }}</div>
-            </li>
-            {% empty %}
-            <li class="category_empty">本分类商品正在上架中</li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
-{% endfor %}
-{% else %}
-<section class="empty_catalog" id="catalog">
-    <div class="empty_catalog_copy">
-        <span class="empty_catalog_badge">校园鲜达 · 新鲜启程</span>
-        <h2>新鲜到校，美好每一天</h2>
-        <p>商城环境已经准备完成，商品分类和校园优选商品正在上架中。</p>
-        <div class="empty_catalog_actions">
-            <a class="primary_action" href="{% url 'df_user:register' %}">注册校园账户</a>
-            <a class="secondary_action" href="/admin/">进入管理后台</a>
+    <div class="navbar_con">
+        <div class="navbar">
+            <h1 class="fl">全部商品分类</h1>
+            <ul class="navlist fl">
+                <li><a href="{% url 'df_goods:index' %}">首页</a></li>
+                <li class="interval">|</li>
+                <li><a href="#">手机生鲜</a></li>
+                <li class="interval">|</li>
+                <li><a href="#">抽奖</a></li>
+            </ul>
         </div>
     </div>
-    <img src="/static/images/campus_fresh_empty.png" alt="校园生鲜配送插画">
-</section>
-<section class="service_strip" id="service">
-    <div><strong>校内优选</strong><span>面向校园生活精选商品</span></div>
-    <div><strong>新鲜到校</strong><span>支持后续扩展配送与自提</span></div>
-    <div><strong>质量可追踪</strong><span>测试、缺陷与改进全程留痕</span></div>
-</section>
-{% endif %}
+
+    <div class="center_con clearfix">
+        <ul class="subnav fl">
+            {% for section in sections %}
+                <li><a href="#model{{ section.category.id }}" class="{{ section.style }}">{{ section.category.ttitle }}</a></li>
+            {% endfor %}
+        </ul>
+        <div class="slide fl">
+            <ul class="slide_pics">
+                <li><img src="/static/images/slide.jpg" alt="幻灯片"></li>
+                <li><img src="/static/images/slide02.jpg" alt="幻灯片"></li>
+                <li><img src="/static/images/slide03.jpg" alt="幻灯片"></li>
+                <li><img src="/static/images/slide04.jpg" alt="幻灯片"></li>
+            </ul>
+            <div class="prev"></div>
+            <div class="next"></div>
+            <ul class="points"></ul>
+        </div>
+        <div class="adv fl">
+            <a href="#"><img src="/static/images/adv01.jpg"></a>
+            <a href="#"><img src="/static/images/adv02.jpg"></a>
+        </div>
+    </div>
+
+    {% for section in sections %}
+        <div class="list_model">
+            <div class="list_title clearfix">
+                <h3 class="fl" id="model{{ section.category.id }}">{{ section.category.ttitle }}</h3>
+                <div class="subtitle fl">
+                    <span>|</span>
+                    {% for goods in section.hot %}
+                        <a href="{% url 'df_goods:detail' goods.id %}">{{ goods.gtitle|slice:':10' }}</a>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'df_goods:good_list' section.category.id 1 1 %}" class="goods_more fr">查看更多 &gt;</a>
+            </div>
+
+            <div class="goods_con clearfix">
+                <div class="goods_banner fl"><img src="/static/{{ section.banner }}"></div>
+                <ul class="goods_list fl">
+                    {% for goods in section.latest %}
+                        <li>
+                            <h4><a href="{% url 'df_goods:detail' goods.id %}">{{ goods.gtitle }}</a></h4>
+                            <a href="{% url 'df_goods:detail' goods.id %}"><img src="{{ goods.image_url }}"></a>
+                            <div class="prize">￥ {{ goods.gprice }}</div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endfor %}
+
+    <script type="text/javascript">
+        BCSlideshow('focuspic');
+    </script>
+
 {% endblock center_body %}

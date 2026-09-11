@@ -1,12 +1,12 @@
-from django.urls import re_path
+from django.conf.urls import url
 
 from . import views
 
-app_name = "df_goods"
+app_name = 'df_goods'
 
 urlpatterns = [
-    re_path(r"^$", views.index, name="index"),
-    re_path(r"^list(\d+)_(\d+)_(\d+)/$", views.good_list, name="good_list"),
-    re_path(r"^(\d+)/$", views.detail, name="detail"),
-    re_path(r"^search/", views.ordinary_search, name="ordinary_search"),
+    url('^$', views.index, name="index"),
+    url('^list(\d+)_(\d+)_(\d+)/$', views.good_list, name="good_list"),
+    url('^(\d+)/$', views.detail, name="detail"),
+    url(r'^search/', views.ordinary_search, name="ordinary_search"),  # 全文检索
 ]

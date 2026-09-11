@@ -1,77 +1,71 @@
-# 校园鲜达质量改进项目
+## DailyFresh
 
-本仓库用于软件测试与质量保证课程实践。被测系统以 DailyFresh Django 生鲜商城的代码快照为起点，三名成员将在清晰标注来源的基础上重新完成需求分析、测试设计、测试实现、缺陷验证和质量改进。
+**天天生鲜**：小型电商购物网站，基于<code>Python3.x</code>和<code>Django2.x</code>
 
-## 当前状态
+项目尽量使用Django内部提供的API，后台管理为Django自带的管理系统django-admin。适合Django的小型实战项目。
 
-- 基线：`baseline-v0.1`
-- 当前环境：Python 3.13 + Django 5.2 LTS
-- 已验证版本：Python 3.13.9、Django 5.2.17、django-tinymce 5.0.0、Pillow 12.3.0
-- 数据库：本地 SQLite，数据库文件不提交到 Git
+## 功能简介：
 
-环境迁移只处理新版框架兼容问题，没有修改商城业务规则。模块一的测试用例和自动化测试不会从往届材料复制，也不会由 AI 生成。
+- 商品浏览：商品的图片，售价，种类，简介以及库存等信息。
+- 全文检索：支持对商品种类以及商品名称，简介的检索。
+- 登录注册：用户的登录与注册。
+- 用户中心：支持用户个人信息，收货地址等信息的更新，商品加入购物车，订单生成。
+- 商品下单：在支付接口和企业资质的支持下可完成商品的下单功能，按照原子事务处理，下单异常则终止此次下单过程。
+- 后台管理：支持后台管理功能，商品及用户信息的增加，更新与删除，可自定制样式与功能，日志，以及权限的管理和分配。
 
-## 本地启动
 
-在 Windows PowerShell 中执行：
+## 在线样例：
 
-```powershell
-cd "E:\project\softtest project"
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+## 预览：
+### 首页
+![index](https://raw.githubusercontent.com/weilanhanf/Photos/master/DailyFresh/index.png)
 
-浏览器打开 `http://127.0.0.1:8000/`。以后进入项目时只需激活已有虚拟环境，不要重复创建：
+### 登录
+![login](https://raw.githubusercontent.com/weilanhanf/Photos/master/DailyFresh/login.png)
 
-```powershell
-cd "E:\project\softtest project"
-.\.venv\Scripts\Activate.ps1
-python manage.py runserver
-```
+### 商品详情
+![goods](https://raw.githubusercontent.com/weilanhanf/Photos/master/DailyFresh/goods.png)
 
-也可以不激活环境，直接使用：
+### 购物车
+![cart](https://raw.githubusercontent.com/weilanhanf/Photos/master/DailyFresh/cart.png)
 
-```powershell
-.\.venv\Scripts\python.exe manage.py runserver
-```
+## 安装：
 
-## 当前数据说明
+### 依赖包安装
 
-仓库不会复制往届 SQLite 数据库，因为其中可能混有往届账号、订单和测试数据。全新数据库迁移后没有商品分类和商品数据，首页会显示校园鲜达欢迎页和商品待上架提示，不再因固定读取六个分类而报错。
+下载文件进入项目目录之后，使用pip安装依赖包
 
-下一阶段应由商品模块负责人建立本组自己的脱敏演示数据，并继续验证分类数量不足、分类为空和商品图片缺失等边界场景。
+<code>pip install -Ur requirements.txt</code>
 
-## 业务范围
+### 数据库配置
 
-- 用户、登录和收货信息
-- 商品、搜索和浏览历史
-- 购物车、订单和库存
+数据库默认使用<code>Django</code>项目生成时自动创建的小型数据库<code>sqlite</code>
 
-## 目录
+也可自行配置连接使用MySQL
 
-- `apps/`：商城业务模块
-- `daily_fresh_demo/`：Django 项目配置
-- `templates/`：页面模板
-- `static/`：静态资源
-- `sql/`：原参考项目附带的数据库结构说明
-- `docs/`：项目设计、需求、缺陷、报告和 AI 过程记录
+### 创建超级用户
 
-## 三人协作
+终端下执行:
 
-- 成员 A（组长）：用户、登录和地址；环境与集成
-- 成员 B：商品、搜索和浏览历史；演示数据与度量
-- 成员 C：购物车、订单和库存；集成执行与演示
+<code>./python manage.py createsuperuser</code>
 
-三名成员使用各自的 GitHub 账号提交实际完成的工作。每名成员在自己的业务域中完成需求、人工测试设计、自动化实现、缺陷闭环和文档，提交信息描述真实变更。
+然后输入相应的超级用户名以及密码，邮箱即可。
 
-## 后续里程碑
+### 开始运行
 
-1. `baseline-v0.1`：清理后的待测系统基线。
-2. `environment-v0.2`：Python 3.13 与 Django 5.2 环境迁移。
-3. `module1-final`：完成基础测试、缺陷修复与回归。
-4. 模块二：在模块一版本上开展 AI 辅助测试对照实验。
+终端下执行:
 
-来源及导入范围见 [NOTICE.md](NOTICE.md)。
+<code>./python manage.py runserver</code>
+
+浏览器打开: <code>http://127.0.0.1</code> 即可进入普通用户入口
+
+浏览器打开: <code>http://127.0.0.1/admin</code> 即可进入超级用户入口
+
+
+## 感谢：
+
+感谢您的star
+
+### 联系：
+
+如需联系请前往博客园留言 <a href="https://www.cnblogs.com/welan/p/9231530.html" target="_blank">链接</a>

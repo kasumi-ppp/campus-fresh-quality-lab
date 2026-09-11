@@ -40,10 +40,9 @@ html,body{height:100%}
 /* logo、搜索框、购物车样式 */
 
 .search_bar{width:1200px;height:115px;margin:0 auto;}
-.logo{width:230px;height:96px;margin:10px 0 0 0;display:flex;align-items:center;}
-.logo img{display:block;width:230px;height:auto;}
+.logo{width:150px;height:59px;margin:29px 0 0 17px;}
 
-.search_con{width:616px;height:38px;border:1px solid #37ab40;margin:34px 0 0 60px;background:url(../images/icons.png) 10px -338px no-repeat;}
+.search_con{width:616px;height:38px;border:1px solid #37ab40;margin:34px 0 0 124px;background:url(../images/icons.png) 10px -338px no-repeat;}
 .search_con .input_text{width:470px;height:34px;border:0px;margin:2px 0 0 36px;outline:none;font-size:12px;color:#737272;font-family:'Microsoft Yahei'}
 
 .search_con .input_btn{
@@ -277,12 +276,11 @@ html,body{height:100%}
 /* 登录页 */
 
 .login_top{width:960px;height:130px;margin:0 auto;}
-.login_logo{display:block;width:260px;height:108px;margin-top:11px;}
-.login_logo img{display:block;width:260px;height:auto;}
+.login_logo{display:block;width:193px;height:76px;margin-top:30px;}
 .login_form_bg{height:480px;background-color:#518e17}
 .no-mp{margin-top:0px;}
 .login_form_wrap{width:960px;height:480px;margin:0 auto;}
-.login_banner{width:381px;height:322px;background:url(../images/campus_fresh_login_banner.png?v=20260908-1) center/contain no-repeat;margin-top:90px;}
+.login_banner{width:381px;height:322px;background:url(../images/login_banner.png) no-repeat;margin-top:90px;}
 .slogan{width:40px;height:300px;font-size:30px;color:#f0f9e8;text-align:center;line-height:36px;margin:80px 0 0 120px}
 .login_form{width:368px;height:378px;border:1px solid #c6c6c5;background-color:#fff; margin-top:50px;}
 
@@ -318,8 +316,7 @@ html,body{height:100%}
 }
 
 .l_con{width:300px;}
-.reg_logo{width:260px;height:108px;float:right;margin-right:20px;}
-.reg_logo img{display:block;width:260px;height:auto;}
+.reg_logo{width:200px;height:76px;float:right;margin-right:30px;}
 .reg_slogan{width:300px;height:30px;float:right;text-align:right;font-size:24px;color:#69a81e;margin:20px 30px 0 0;}
 .reg_banner{width:251px;height:329px;background:url(../images/register_banner.png) no-repeat;float:right; margin:20px 10px 0 0;opacity:0.5}
 
@@ -643,21 +640,3 @@ html,body{height:100%}
 .stress{
 	color:#ff8800;
 }
-
-/* 校园鲜达空目录欢迎页 */
-.empty_catalog{width:1200px;min-height:430px;margin:28px auto 0;border-radius:22px;background:linear-gradient(135deg,#f4fff1 0%,#fff 58%,#fff8e8 100%);box-shadow:0 14px 45px rgba(34,113,61,.10);display:flex;align-items:center;overflow:hidden;}
-.empty_catalog_copy{box-sizing:border-box;width:52%;padding:54px 20px 54px 68px;}
-.empty_catalog_badge{display:inline-block;padding:7px 15px;border-radius:20px;background:#e5f7dc;color:#28743b;font-size:14px;letter-spacing:1px;}
-.empty_catalog h2{margin-top:20px;color:#176739;font-size:38px;font-weight:bold;line-height:1.35;}
-.empty_catalog p{width:470px;margin-top:18px;color:#63706a;font-size:16px;line-height:1.9;}
-.empty_catalog img{display:block;width:48%;max-height:420px;object-fit:contain;}
-.empty_catalog_actions{margin-top:30px;}
-.empty_catalog_actions a{display:inline-block;height:42px;padding:0 24px;border-radius:22px;font-size:15px;line-height:42px;}
-.primary_action{background:#2f9b4f;color:#fff;box-shadow:0 8px 20px rgba(47,155,79,.22);}
-.secondary_action{margin-left:12px;border:1px solid #97cba5;color:#28743b;background:#fff;}
-.service_strip{box-sizing:border-box;width:1200px;margin:22px auto 36px;padding:24px 36px;border:1px solid #e1eee3;border-radius:16px;background:#fff;display:flex;justify-content:space-between;}
-.service_strip div{box-sizing:border-box;width:33.333%;padding:0 35px;border-right:1px solid #e8efe9;text-align:center;}
-.service_strip div:last-child{border-right:0;}
-.service_strip strong{display:block;color:#28743b;font-size:18px;line-height:32px;}
-.service_strip span{display:block;color:#849089;font-size:13px;line-height:22px;}
-.category_empty{box-sizing:border-box;width:100%!important;padding-top:115px;color:#999;text-align:center;}

@@ -4,7 +4,7 @@
 
     <div class="header_con">
 		<div class="header">
-			<div class="welcome fl">欢迎来到校园鲜达！</div>
+			<div class="welcome fl">欢迎来到校园鲜达!</div>
 			<div class="fr">
 {#                判断是否已经登录#}
                 {% if request.session.user_name|default:'' != '' %}
@@ -37,7 +37,7 @@
 
 
     <div class="search_bar clearfix">
-		<a href="/" class="logo fl"><img src="/static/images/campus_fresh_logo.png"></a>
+		<a href="/" class="logo fl"><img src="/static/images/logo.png"></a>
         {% if page_name == 1 %}
             <div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;{{ title }}</div>
         {% endif %}

@@ -8,37 +8,37 @@ from df_user.models import GoodsBrowser
 
 
 def index(request):
-    """Render the catalog using however many active categories exist."""
-    type_list = TypeInfo.objects.filter(isDelete=False).order_by("id")[:6]
+    # Only render categories that contain actual, non-deleted products.
+    nav_styles = ['fruit', 'seafood', 'meet', 'egg', 'vegetables', 'ice']
     sections = []
-    icon_classes = ["fruit", "seafood", "meet", "egg", "vegetables", "ice"]
-
-    for position, type_info in enumerate(type_list, start=1):
-        goods = type_info.goodsinfo_set.filter(isDelete=False)
-        sections.append(
-            {
-                "type": type_info,
-                "latest_goods": goods.order_by("-id")[:4],
-                "popular_goods": goods.order_by("-gclick")[:4],
-                "icon_class": icon_classes[position - 1],
-                "banner": f"banner{position:02d}.jpg",
-                "anchor": f"model{position:02d}",
-            }
-        )
+    for position, category in enumerate(TypeInfo.objects.filter(isDelete=False).order_by('id')):
+        products = category.goodsinfo_set.filter(isDelete=False)
+        latest = products.order_by('-id')[:4]
+        if not latest:
+            continue
+        sections.append({
+            'category': category,
+            'latest': latest,
+            'hot': products.order_by('-gclick')[:4],
+            'style': nav_styles[position % len(nav_styles)],
+            'banner': 'images/banner{:02d}.jpg'.format(position + 1),
+        })
 
     cart_num = 0
-    if "user_id" in request.session:
-        cart_num = CartInfo.objects.filter(
-            user_id=int(request.session["user_id"])
-        ).count()
+    # 判断是否存在登录状态
+    # if request.session.has_key('user_id'):
+    if 'user_id' in request.session:
+        user_id = request.session['user_id']
+        cart_num = CartInfo.objects.filter(user_id=int(user_id)).count()
 
     context = {
-        "title": "首页",
-        "cart_num": cart_num,
-        "guest_cart": 1,
-        "sections": sections,
+        'title': '首页',
+        'cart_num': cart_num,
+        'guest_cart': 1,
+        'sections': sections,
     }
-    return render(request, "df_goods/index.html", context)
+
+    return render(request, 'df_goods/index.html', context)
 
 
 def good_list(request, tid, pindex, sort):

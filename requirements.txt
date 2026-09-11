@@ -1,3 +1,7 @@
-Django==5.2.17
-django-tinymce==5.0.0
-Pillow==12.3.0
+
+Django==2.0.7
+django-tinymce==2.7.0
+Pillow==10.4.0
+pytz==2018.7
+setuptools==75.3.2
+wheel==0.45.1

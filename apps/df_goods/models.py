@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db import models
+from django.templatetags.static import static
 from tinymce.models import HTMLField  # 使用富文本编辑框要在settings文件中安装
 # 将一对多的关系维护在GoodsInfo中维护，另外商品信息与分类信息都属于重要信息需要使用逻辑删除
 
@@ -39,3 +40,13 @@ class GoodsInfo(models.Model):
 
     def __str__(self):
         return self.gtitle
+
+    @property
+    def image_url(self):
+        """Return the appropriate URL for bundled sample images or uploads."""
+        image_name = self.gpic.name if self.gpic else ''
+        if image_name.startswith('df_goods/'):
+            return static(image_name)
+        if image_name:
+            return self.gpic.url
+        return static('images/goods.jpg')
