@@ -1,71 +1,107 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, reverse
 
-from .models import *
+from .models import CartInfo
+from df_goods.models import GoodsInfo
 from df_user import user_decorator
+
+
+def _cart_entry_count(uid):
+    """当前用户购物车中的商品件数，用于页面角标。"""
+    return CartInfo.objects.filter(user_id=uid).count()
+
+
+def _fail(message, **extra):
+    """购物车写操作的失败响应：给出可理解的提示，不泄露调试信息（C-CART-010）。"""
+    data = {'ok': 0, 'msg': message}
+    data.update(extra)
+    return JsonResponse(data)
 
 
 @user_decorator.login
 def user_cart(request):
     uid = request.session['user_id']
     carts = CartInfo.objects.filter(user_id=uid)
+    if request.is_ajax():
+        # 求当前用户购买了几件商品
+        return JsonResponse({'count': carts.count()})
     context = {
         'title': '购物车',
         'page_name': 1,
         'carts': carts
     }
-    if request.is_ajax():
-        count = CartInfo.objects.filter(user_id=request.session['user_id']).count()
-        # 求当前用户购买了几件商品
-        return JsonResponse({'count': count})
-    else:
-        return render(request, 'df_cart/cart.html', context)
+    return render(request, 'df_cart/cart.html', context)
 
 
 @user_decorator.login
 def add(request, gid, count):
     uid = request.session['user_id']
     gid, count = int(gid), int(count)
-    # 查询购物车中是否已经有此商品，如果有则数量增加，如果没有则新增
-    carts = CartInfo.objects.filter(user_id=uid, goods_id=gid)
-    if len(carts) >= 1:
-        cart = carts[0]
-        cart.count = cart.count + count
+
+    # C-CART-004：购买数量必须是正整数
+    if count < 1:
+        return _fail('购买数量必须是大于 0 的整数', count=_cart_entry_count(uid))
+
+    goods = GoodsInfo.objects.filter(pk=gid).select_related('gtype').first()
+    if goods is None:
+        return _fail('商品不存在', count=_cart_entry_count(uid))
+    # C-CART-005：已逻辑删除、所属分类失效或库存为 0 的商品不得新加入购物车
+    if not goods.is_on_sale:
+        return _fail('商品“%s”已下架或暂时缺货，无法加入购物车' % goods.gtitle,
+                     count=_cart_entry_count(uid))
+
+    # C-CART-003：同一用户的同一商品只保留一个条目，重复加入时累加数量
+    cart = CartInfo.objects.filter(user_id=uid, goods_id=gid).first()
+    target = count if cart is None else cart.count + count
+    # C-CART-004：累加后的数量不得超过商品当前可售库存
+    if target > goods.gkucun:
+        return _fail('购买数量超过库存，当前库存 %d' % goods.gkucun,
+                     count=_cart_entry_count(uid))
+
+    if cart is None:
+        cart = CartInfo(user_id=uid, goods_id=gid, count=target)
     else:
-        cart = CartInfo()
-        cart.user_id = uid
-        cart.goods_id = gid
-        cart.count = count
+        cart.count = target
     cart.save()
+
     # 如果是ajax提交则直接返回json，否则转向购物车
     if request.is_ajax():
-        count = CartInfo.objects.filter(user_id=request.session['user_id']).count()
-        # 求当前用户购买了几件商品
-        return JsonResponse({'count': count})
-    else:
-        return redirect(reverse("df_cart:cart"))
+        return JsonResponse({'count': _cart_entry_count(uid)})
+    return redirect(reverse("df_cart:cart"))
 
 
 @user_decorator.login
 def edit(request, cart_id, count):
-    data = {}
-    try:
-        cart = CartInfo.objects.get(pk=int(cart_id))
-        cart.count = int(count)
-        cart.save()
-        data['count'] = 0
-    except Exception:
-        data['count'] = count
-    return JsonResponse(data)
+    uid = request.session['user_id']
+    cart_id, count = int(cart_id), int(count)
+
+    # C-CART-002：只能修改属于自己的购物车条目，浏览器传入的编号不能作为权限依据
+    cart = CartInfo.objects.filter(
+        pk=cart_id, user_id=uid
+    ).select_related('goods', 'goods__gtype').first()
+    if cart is None:
+        return _fail('购物车条目不存在', count=0)
+
+    # C-CART-004：数量必须是正整数，且不得超过商品当前可售库存
+    if count < 1:
+        return _fail('购买数量必须是大于 0 的整数', count=cart.count)
+    if not cart.goods.is_on_sale:
+        return _fail('商品“%s”已下架或暂时缺货' % cart.goods.gtitle, count=cart.count)
+    if count > cart.goods.gkucun:
+        return _fail('购买数量超过库存，当前库存 %d' % cart.goods.gkucun, count=cart.count)
+
+    cart.count = count
+    cart.save()
+    # count 为 0 表示修改成功，沿用页面原有的判定约定（C-CART-007）
+    return JsonResponse({'ok': 1, 'count': 0})
 
 
 @user_decorator.login
 def delete(request, cart_id):
-    data = {}
-    try:
-        cart = CartInfo.objects.get(pk=int(cart_id))
-        cart.delete()
-        data['ok'] = 1
-    except Exception:
-        data['ok'] = 0
-    return JsonResponse(data)
+    uid = request.session['user_id']
+
+    # C-CART-008：只能删除属于自己的条目，其他用户的数据不受影响
+    deleted, _ = CartInfo.objects.filter(pk=cart_id, user_id=uid).delete()
+    if deleted == 0:
+        return _fail('购物车条目不存在或已被删除')
+    return JsonResponse({'ok': 1})

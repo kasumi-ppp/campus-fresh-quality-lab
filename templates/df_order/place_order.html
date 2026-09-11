@@ -78,9 +78,15 @@
 		</div>
 	</div>
 
+	{% if empty_cart %}
+	<div class="order_submit clearfix">
+		<span class="empty_tip">购物车中没有可结算的商品，请先返回购物车选择商品。</span>
+	</div>
+	{% else %}
 	<div class="order_submit clearfix">
 		<a href="javascript:;" id="order_btn">提交订单</a>
-	</div>	
+	</div>
+	{% endif %}
 
 		<div class="popup_con">
 		<div class="popup">
@@ -93,35 +99,33 @@
 	<script type="text/javascript">
 		$('#order_btn').click(function() {
 		    //检查当前收货地址是否正确
+		    var number = 0;
 		    $('.user_info_check').each(function () {
-		        text = $(this).text();
-				number = 0;
-		        if (text == ''){
+		        if ($(this).text() == ''){
 					number = 1;
 				}
             });
 			if (number == 1){
 				alert('请填写正确的收货地址');
 				window.location.href = '{% url "df_user:site" %}';
+				return;
 			}
 
 		    //获取所有id，拼接成字符串
-            cartids = '';
+            var cartids = '';
             $('.goods_list_td').each(function () {
                cartids = cartids + $(this).attr('id') +','
             });
 		    cartids = cartids.substring(0,cartids.length-1);
-		    total = {{ total_trans_price }};
+		    //订单金额改由服务器重新计算，页面不再提交 total（C-ORD-005）
 		    data = {
 		            'cart_ids':cartids,
-                    'total':total,
                     'csrfmiddlewaretoken':'{{ csrf_token }}'
 		    };
 
 		    //先发请求
             $.post('/order/push/',data,function (data) {
                 //成功
-
                 if (data.ok == 1){
                     localStorage.setItem('order_finish',2);
 
@@ -135,7 +139,8 @@
                     });
                 }
                 else {
-                    alert('订单提交失败')
+                    //展示服务器返回的失败原因（C-ORD-010）
+                    alert(data.msg || '订单提交失败')
                 }
             })
 		});

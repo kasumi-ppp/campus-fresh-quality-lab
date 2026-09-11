@@ -172,7 +172,13 @@ class OrderViewsTests(TestCase):
         session = self.client.session
         session["user_id"] = self.user.id
         session.save()
-        
+
+        # 下单前必须存在有效收货地址，订单会保存地址快照（C-ORD-003）
+        self.user.uaddress = "北京市海淀区中关村大街1号"
+        self.user.ushou = "张三"
+        self.user.uphone = "13800000000"
+        self.user.save()
+
         # 添加购物车商品
         cart1 = CartInfo.objects.create(
             user=self.user,
@@ -184,8 +190,10 @@ class OrderViewsTests(TestCase):
             goods=self.goods2,
             count=1
         )
-        
+
         url = reverse("df_order:push")
+        # 这里的 total 故意提交与服务器计算结果不一致的值，
+        # 用于验证后端不信任浏览器提交的金额（C-ORD-005）
         resp = self.client.post(url, {
             "cart_ids": f"{cart1.id},{cart2.id}",
             "total": "33.00"
@@ -198,7 +206,9 @@ class OrderViewsTests(TestCase):
         # 验证订单创建
         order = OrderInfo.objects.filter(user=self.user).first()
         self.assertIsNotNone(order)
-        self.assertEqual(order.ototal, Decimal('33.00'))
+        # 订单总额以服务器重新计算的金额为准：商品小计 25.00 + 8.00，加配送费 10.00
+        self.assertEqual(order.ototal, Decimal('43.00'))
+        self.assertEqual(order.oaddress, "北京市海淀区中关村大街1号")
         
         # 验证订单详情创建
         order_details = OrderDetailInfo.objects.filter(order=order)
@@ -221,21 +231,27 @@ class OrderViewsTests(TestCase):
         session = self.client.session
         session["user_id"] = self.user.id
         session.save()
-        
+
+        # 下单前必须存在有效收货地址（C-ORD-003）
+        self.user.uaddress = "北京市海淀区中关村大街1号"
+        self.user.save()
+
         # 添加购物车商品，数量超过库存
         cart1 = CartInfo.objects.create(
             user=self.user,
             goods=self.goods1,
             count=150  # 超过库存100
         )
-        
+
         url = reverse("df_order:push")
         resp = self.client.post(url, {
             "cart_ids": f"{cart1.id}",
             "total": "1875.00"
         })
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.content.decode(), "库存不足")
+        data = resp.json()
+        self.assertEqual(data["ok"], 0)
+        self.assertIn("库存不足", data["msg"])
         
         # 验证订单未创建
         order_count = OrderInfo.objects.filter(user=self.user).count()

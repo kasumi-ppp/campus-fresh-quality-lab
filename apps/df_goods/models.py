@@ -42,6 +42,11 @@ class GoodsInfo(models.Model):
         return self.gtitle
 
     @property
+    def is_on_sale(self):
+        """有效销售商品：未逻辑删除、所属分类未失效、库存大于 0（业务规则 3）。"""
+        return (not self.isDelete) and (not self.gtype.isDelete) and self.gkucun > 0
+
+    @property
     def image_url(self):
         """Return the appropriate URL for bundled sample images or uploads."""
         image_name = self.gpic.name if self.gpic else ''

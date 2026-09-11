@@ -45,49 +45,50 @@
 {#         });#}
         //在blur事件里ajax 提交
         $('.num_show').blur(function () {
-            count=parseFloat($(this).val());
-            kucun=parseFloat($(this).attr('kucun'));
-            if(count<1){
-                alert('数量不能小于1');
-                $(this).val(1);
-                count = 1;
-                $(this).focus();
+            var input = $(this);
+            var count = parseInt(input.val(), 10);
+            var kucun = parseInt(input.attr('kucun'), 10);
+            if(isNaN(count) || count<1){
+                alert('数量必须是大于0的整数');
+                input.val(1);
+                input.focus();
                 return;
             }
-            else if(count>kucun){
-             alert('数量不可超过库存');
-             $(this).val(kucun);
-             count = kucun;
-             $(this).focus();
-             return;
+            else if(!isNaN(kucun) && count>kucun){
+                alert('数量不可超过库存');
+                input.val(kucun);
+                input.focus();
+                return;
             }
 
-            cart_id = $(this).parents('.cart_list_td').attr('id');
+            var cart_id = input.parents('.cart_list_td').attr('id');
             $.get('/cart/edit'+cart_id+'_'+count+'/',function (data) {
-                if(data.count==0){
-                    //修改成功，计算总价
-{#                    alert('ok');#}
+                if(data.ok==1){
+                    //修改成功，按服务器保存的数量重算合计
                     total();
                 }
                 else {
-                    //修改失败,改为原来 的值（回掉回来原来的值）
-                    $(this).val(data.count)
+                    //修改失败：回填服务器保存的数量并提示原因（C-CART-007 / C-CART-010）
+                    input.val(data.count);
+                    if(data.msg){
+                        alert(data.msg);
+                    }
+                    total();
                 }
             })
         })
     });
     function cart_del(cart_id) {
-            del = confirm('确定删除');
-{#            cart_id = $(this).parents('.cart_list_td').attr('id');#}
-{#            alert(cart_id);#}
+            var del = confirm('确定删除');
             if(del){
                 $.get('/cart/delete'+cart_id+'/',function (data) {
-{#                    alert(data.ok);#}
                     if(data.ok==1){
-                        //删掉哪一行 商品  界面元素
-{#                        alert('删除');#}
-                        $('ul').remove('#'+cart_id);
+                        //删除成功后移除该行并重算合计（C-CART-008）
+                        $('[id="'+cart_id+'"]').remove();
                         total();
+                    }
+                    else if(data.msg){
+                        alert(data.msg);
                     }
                 })
             }

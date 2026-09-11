@@ -1,93 +1,165 @@
 from django.db import transaction
+from django.db.models import F
 from django.http import JsonResponse
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render
 
 from datetime import datetime
 from decimal import Decimal
 
 from .models import OrderInfo, OrderDetailInfo
 from df_cart.models import CartInfo
+from df_goods.models import GoodsInfo
 from df_user.models import UserInfo
 from df_user import user_decorator
+
+# C-ORD-004：配送费固定为每个订单 10.00 元，确认页与订单记录使用同一规则
+TRANS_COST = Decimal('10.00')
+
+
+class OrderSubmitError(Exception):
+    """下单过程中的业务失败，用于回滚事务并向用户返回可理解的提示。"""
+
+
+def _new_oid():
+    """生成唯一订单号（C-ORD-006）：秒级时间戳加微秒片段，共 18 位。
+
+    原实现使用“时间戳 + 用户编号”，同一用户在同一秒内重复下单会得到相同编号，
+    而 oid 是主键，后一次下单会覆盖前一张订单。
+    """
+    for _ in range(5):
+        now = datetime.now()
+        oid = '%s%04d' % (now.strftime('%Y%m%d%H%M%S'), now.microsecond // 100)
+        if not OrderInfo.objects.filter(oid=oid).exists():
+            return oid
+    raise OrderSubmitError('订单号生成失败，请稍后重试')
+
+
+def _parse_cart_id(raw_id):
+    """购物车条目编号必须是正整数，非法参数返回 None（C-ORD-001）。"""
+    try:
+        cart_id = int(str(raw_id).strip())
+    except (TypeError, ValueError):
+        return None
+    return cart_id if cart_id > 0 else None
 
 
 @user_decorator.login
 def order(request):
     uid = request.session['user_id']
     user = UserInfo.objects.get(id=uid)
-    cart_ids = request.GET.getlist('cart_id')
-    carts = []
-    total_price = 0
-    for goods_id in cart_ids:
-        cart = CartInfo.objects.get(id=goods_id)
-        carts.append(cart)
-        total_price = total_price + float(cart.count) * float(cart.goods.gprice)
 
-    total_price = float('%0.2f' % total_price)
-    trans_cost = 10  # 运费
-    total_trans_price = trans_cost + total_price
+    carts = []
+    for raw_id in request.GET.getlist('cart_id'):
+        cart_id = _parse_cart_id(raw_id)
+        if cart_id is None:
+            continue
+        # C-ORD-001：只能选择属于自己的购物车条目，且商品必须仍然有效
+        cart = CartInfo.objects.filter(
+            pk=cart_id, user_id=uid
+        ).select_related('goods', 'goods__gtype').first()
+        if cart is not None and cart.goods.is_on_sale:
+            carts.append(cart)
+
+    # C-ORD-005：金额由服务器使用十进制数计算，不使用浮点数
+    total_price = sum((cart.goods.gprice * cart.count for cart in carts), Decimal('0.00'))
+    total_trans_price = total_price + TRANS_COST
+
     context = {
         'title': '提交订单',
         'page_name': 1,
         'user': user,
         'carts': carts,
-        'total_price': float('%0.2f' % total_price),
-        'trans_cost': trans_cost,
+        'total_price': total_price,
+        'trans_cost': TRANS_COST,
         'total_trans_price': total_trans_price,
-        # 'value':value
+        # C-CART-009：没有有效商品时页面给出提示，并阻止提交
+        'empty_cart': not carts,
     }
     return render(request, 'df_order/place_order.html', context)
 
-'''
-事务提交：
-这些步骤中，任何一环节一旦出错则全部退回1
-1. 创建订单对象
-2. 判断商品库存是否充足
-3. 创建 订单 详情 ，多个
-4，修改商品库存
-5. 删除购物车
-'''
-
 
 @user_decorator.login
-@transaction.atomic()  # 事务
 def order_handle(request):
-    tran_id = transaction.savepoint()  # 保存事务发生点
-    cart_ids = request.POST.get('cart_ids')  # 用户提交的订单购物车，此时cart_ids为字符串，例如'1,2,3,'
-    user_id = request.session['user_id']  # 获取当前用户的id
-    data = {}
-    try:
-        order_info = OrderInfo()  # 创建一个订单对象
-        now = datetime.now()
-        order_info.oid = '%s%d' % (now.strftime('%Y%m%d%H%M%S'), user_id)  # 订单号为订单提交时间和用户id的拼接
-        order_info.odate = now  # 订单时间
-        order_info.user_id = int(user_id)  # 订单的用户id
-        order_info.ototal = Decimal(request.POST.get('total'))  # 从前端获取的订单总价
-        order_info.save()  # 保存订单
+    """创建订单：校验、计算、扣减库存和清理购物车在同一事务中完成（C-INV-005）。"""
+    uid = request.session['user_id']
+    cart_ids = (request.POST.get('cart_ids') or '').strip()
 
-        for cart_id in cart_ids.split(','):  # 逐个对用户提交订单中的每类商品即每一个小购物车
-            cart = CartInfo.objects.get(pk=cart_id)  # 从CartInfo表中获取小购物车对象
-            order_detail = OrderDetailInfo()  # 大订单中的每一个小商品订单
-            order_detail.order = order_info  # 外键关联，小订单与大订单绑定
-            goods = cart.goods  # 具体商品
-            if cart.count <= goods.gkucun:  # 判断库存是否满足订单，如果满足，修改数据库
-                goods.gkucun = goods.gkucun - cart.count
-                goods.save()
-                order_detail.goods = goods
-                order_detail.price = goods.gprice
-                order_detail.count = cart.count
-                order_detail.save()
-                cart.delete()  # 并删除当前购物车
-            else:  # 否则，则事务回滚，订单取消
-                transaction.savepoint_rollback(tran_id)
-                return HttpResponse('库存不足')
-        data['ok'] = 1
-        transaction.savepoint_commit(tran_id)
-    except Exception as e:
-        print("%s" % e)
-        print('未完成订单提交')
-        transaction.savepoint_rollback(tran_id)  # 事务任何一个环节出错，则事务全部取消
-    return JsonResponse(data)
+    try:
+        with transaction.atomic():
+            # C-CART-009：空购物车不得进入无商品的订单确认流程
+            if not cart_ids:
+                raise OrderSubmitError('请选择要结算的商品')
+
+            user = UserInfo.objects.get(id=uid)
+            # C-ORD-003：下单前必须存在有效收货地址，不能依赖页面校验
+            if not (user.uaddress or '').strip():
+                raise OrderSubmitError('请先填写收货地址')
+
+            carts = []
+            seen = set()
+            for raw_id in cart_ids.split(','):
+                cart_id = _parse_cart_id(raw_id)
+                if cart_id is None:
+                    raise OrderSubmitError('购物车条目编号无效，请重新选择商品')
+                if cart_id in seen:
+                    # C-ORD-009：同一次提交中的重复条目只结算一次
+                    continue
+                seen.add(cart_id)
+
+                # C-ORD-001：只能结算属于当前用户的条目
+                cart = CartInfo.objects.filter(
+                    pk=cart_id, user_id=uid
+                ).select_related('goods', 'goods__gtype').first()
+                if cart is None:
+                    raise OrderSubmitError('购物车条目不存在或不属于当前用户')
+                # C-INV-001：下单时重新读取并校验商品的有效状态
+                if not cart.goods.is_on_sale:
+                    raise OrderSubmitError('商品“%s”已下架或库存不足' % cart.goods.gtitle)
+                carts.append(cart)
+
+            if not carts:
+                raise OrderSubmitError('请选择要结算的商品')
+
+            # C-ORD-005：服务器端用十进制金额重新计算，忽略浏览器提交的总额
+            goods_total = sum((cart.goods.gprice * cart.count for cart in carts), Decimal('0.00'))
+            order_total = goods_total + TRANS_COST
+
+            order_info = OrderInfo()
+            order_info.oid = _new_oid()          # C-ORD-006：订单编号唯一且不为空
+            order_info.user_id = int(uid)        # C-ORD-006：关联当前登录用户
+            order_info.ototal = order_total      # C-ORD-005：服务器计算的订单总额
+            order_info.oaddress = user.uaddress  # C-ORD-003：保存下单时的收货信息快照
+            order_info.save()
+
+            for cart in carts:
+                goods = cart.goods
+                # C-INV-002 / C-INV-004：以条件更新原子扣减库存，
+                # 只有库存仍然充足时才会命中，并发下单不会超卖。
+                affected = GoodsInfo.objects.filter(
+                    pk=goods.pk,
+                    isDelete=False,
+                    gtype__isDelete=False,
+                    gkucun__gte=cart.count,
+                ).update(gkucun=F('gkucun') - cart.count)
+                if affected != 1:
+                    raise OrderSubmitError('商品“%s”库存不足' % goods.gtitle)
+
+                OrderDetailInfo.objects.create(
+                    order=order_info,
+                    goods=goods,
+                    price=goods.gprice,  # C-ORD-007：保存下单时的价格快照
+                    count=cart.count,
+                )
+                cart.delete()  # C-ORD-008：只删除本次已结算的条目
+    except OrderSubmitError as exc:
+        # C-INV-003 / C-INV-006：业务失败时事务整体回滚，
+        # 购物车条目、库存和订单数据都保持失败前的状态。
+        return JsonResponse({'ok': 0, 'msg': str(exc)})
+    except Exception:
+        # C-ORD-010：未预期的异常同样回滚，但不向普通用户展示调试堆栈
+        return JsonResponse({'ok': 0, 'msg': '订单提交失败，请稍后重试'})
+
+    return JsonResponse({'ok': 1, 'oid': order_info.oid})
 
 
 @user_decorator.login
