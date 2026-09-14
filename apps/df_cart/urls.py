@@ -1,14 +1,12 @@
-#!/user/bin/env python
-# -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.urls import re_path
 
 from . import views
 
-app_name = 'df_cart'
+app_name = "df_cart"
 
 urlpatterns = [
-    url(r'^$', views.user_cart, name="cart"),
-    url(r'^add(\d+)_(\d+)/$', views.add, name="add"),
-    url(r'^edit(\d+)_(\d+)/$', views.edit, name="edit"),
-    url(r'^delete(\d+)/$', views.delete, name="delete"),
+    re_path(r"^$", views.user_cart, name="cart"),
+    re_path(r"^add(\d+)_(\d+)/$", views.add, name="add"),
+    re_path(r"^edit(\d+)_(\d+)/$", views.edit, name="edit"),
+    re_path(r"^delete(\d+)/$", views.delete, name="delete"),
 ]

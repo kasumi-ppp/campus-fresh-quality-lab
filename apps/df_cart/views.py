@@ -22,7 +22,7 @@ def _fail(message, **extra):
 def user_cart(request):
     uid = request.session['user_id']
     carts = CartInfo.objects.filter(user_id=uid)
-    if request.is_ajax():
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
         # 求当前用户购买了几件商品
         return JsonResponse({'count': carts.count()})
     context = {
@@ -65,7 +65,7 @@ def add(request, gid, count):
     cart.save()
 
     # 如果是ajax提交则直接返回json，否则转向购物车
-    if request.is_ajax():
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({'count': _cart_entry_count(uid)})
     return redirect(reverse("df_cart:cart"))
 

@@ -1,12 +1,10 @@
-#!/user/bin/env python
-# -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.urls import re_path
 
 from . import views
 
-app_name = 'df_order'
+app_name = "df_order"
 
 urlpatterns = [
-    url(r'^$', views.order, name="order"),
-    url(r'^push/$', views.order_handle, name="push"),
+    re_path(r"^$", views.order, name="order"),
+    re_path(r"^push/$", views.order_handle, name="push"),
 ]
