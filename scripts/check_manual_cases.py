@@ -14,16 +14,45 @@ from xml.etree import ElementTree as ET
 
 
 NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+TEXT_TAG = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}t"
 REQUIRED = ("F", "G", "H", "I", "J", "K", "L", "M")
 
 
-def cell_value(cell: ET.Element) -> str:
+def read_shared_strings(archive: zipfile.ZipFile) -> list[str]:
+    """读取共享字符串表。
+
+    Excel 保存工作簿时会把单元格文本集中存到 sharedStrings.xml，单元格里只留下
+    一个数字下标。不解析这张表就会把下标当成内容读出来。
+    """
+    if "xl/sharedStrings.xml" not in archive.namelist():
+        return []
+    root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+    return [
+        "".join(node.text or "" for node in item.iter(TEXT_TAG))
+        for item in root.findall("x:si", NS)
+    ]
+
+
+def cell_value(cell: ET.Element, shared: list[str]) -> str:
+    kind = cell.attrib.get("t")
+    if kind == "s":
+        value = cell.find("x:v", NS)
+        if value is None or value.text is None:
+            return ""
+        index = int(value.text)
+        return shared[index].strip() if 0 <= index < len(shared) else ""
+    if kind == "inlineStr":
+        inline = cell.find("x:is", NS)
+        if inline is None:
+            return ""
+        return "".join(node.text or "" for node in inline.iter(TEXT_TAG)).strip()
     value = cell.find("x:v", NS)
     return "" if value is None or value.text is None else value.text.strip()
 
 
 def read_case_rows(workbook: Path) -> list[dict[str, str]]:
     with zipfile.ZipFile(workbook) as archive:
+        shared = read_shared_strings(archive)
         sheet = ET.fromstring(archive.read("xl/worksheets/sheet2.xml"))
 
     rows: list[dict[str, str]] = []
@@ -35,7 +64,7 @@ def read_case_rows(workbook: Path) -> list[dict[str, str]]:
         for cell in row.findall("x:c", NS):
             ref = cell.attrib.get("r", "")
             column = "".join(char for char in ref if char.isalpha())
-            values[column] = cell_value(cell)
+            values[column] = cell_value(cell, shared)
         if values.get("A"):
             values["_row"] = str(row_number)
             rows.append(values)
