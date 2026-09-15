@@ -54,6 +54,7 @@ python manage.py runserver
 
 - [人工测试用例记录表](docs/testing/module1-manual-test-case-matrix.xlsx)：36 条覆盖编号，执行字段由三位成员亲自补写和执行。
 - [缺陷证据记录](docs/testing/module1-defect-evidence.md)：D-01、D-03、D-04 的复现、修复和回归链路。
+- [修复前代码片段](docs/testing/baseline-defect-snippets.txt)：从 `84aa763` 直接提取的基线证据。
 - [中期检查 PPT](docs/presentation/campus-fresh-module1-midterm.pptx)：11 页、5–8 分钟汇报稿。
 
 提交前可运行完整度检查。脚本只检查字段是否齐全，不生成测试用例，也不执行测试：

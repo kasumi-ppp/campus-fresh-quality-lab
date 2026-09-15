@@ -12,6 +12,8 @@
 
 执行记录见 `docs/testing/defect-regression-output.txt`：专项回归共 10 个测试，结果为 `OK`。
 
+修复前代码片段和提取命令见 `docs/testing/baseline-defect-snippets.txt`，可直接用 Git 历史复核基线行为。
+
 ## D-01：购物车条目越权修改
 
 | 项目 | 证据 |

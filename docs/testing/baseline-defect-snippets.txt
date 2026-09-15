@@ -1,0 +1,42 @@
+校园鲜达模块一缺陷证据：修复前代码快照
+
+基线提交：84aa763（demo-v0.3）
+修复提交：816eec0
+
+以下片段由 Git 历史直接提取，供报告或答辩核对。不要将片段复制回当前实现。
+
+[D-01 购物车越权修改]
+来源：apps/df_cart/views.py @ 84aa763
+
+    cart = CartInfo.objects.get(pk=int(cart_id))
+    cart.count = int(count)
+    cart.save()
+
+该查询只有条目编号，没有当前用户条件。当前修复见 apps/df_cart/views.py 的
+CartInfo.objects.filter(pk=cart_id, user_id=uid)。
+
+[D-03 订单越权结算]
+来源：apps/df_order/views.py @ 84aa763
+
+    cart = CartInfo.objects.get(pk=cart_id)
+    order_detail.order = order_info
+    goods = cart.goods
+
+订单创建循环直接使用客户端提交的 cart_id，没有校验条目是否属于当前用户。当前修复在
+订单确认页和下单接口都增加了 pk=cart_id, user_id=uid 条件。
+
+[D-04 订单总额信任浏览器输入]
+来源：apps/df_order/views.py @ 84aa763
+
+    order_info.ototal = Decimal(request.POST.get('total'))
+
+服务器直接保存 POST 的 total，没有依据商品单价和数量重算。当前修复使用 Decimal
+重算商品小计并加配送费，忽略浏览器提交的金额。
+
+历史提取命令：
+
+    git show 84aa763:apps/df_cart/views.py
+    git show 84aa763:apps/df_order/views.py
+
+当前回归命令和结果见 defect-regression-output.txt；三条缺陷的结构化记录见
+module1-defect-evidence.md。
