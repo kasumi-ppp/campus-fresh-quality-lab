@@ -50,6 +50,21 @@ python manage.py runserver
 
 命令可以重复执行而不会重复创建同名商品。需要重新生成这组演示商品时可使用 `--reset`；该参数只处理本命令生成的商品，并保留其他业务数据。加载完成后刷新首页即可看到商品分类和商品卡片。
 
+## 模块一测试资料
+
+- [人工测试用例记录表](docs/testing/module1-manual-test-case-matrix.xlsx)：36 条覆盖编号，执行字段由三位成员亲自补写和执行。
+- [缺陷证据记录](docs/testing/module1-defect-evidence.md)：D-01、D-03、D-04 的复现、修复和回归链路。
+- [中期检查 PPT](docs/presentation/campus-fresh-module1-midterm.pptx)：11 页、5–8 分钟汇报稿。
+
+提交前可运行完整度检查。脚本只检查字段是否齐全，不生成测试用例，也不执行测试：
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_manual_cases.py
+.\.venv\Scripts\python.exe scripts/check_manual_cases.py --strict
+```
+
+`--strict` 只有在至少 30 条用例完成成员填写并执行后才会通过。
+
 ## 业务范围
 
 - 用户、登录和收货信息
