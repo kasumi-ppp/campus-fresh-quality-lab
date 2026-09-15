@@ -1,0 +1,154 @@
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+[df_cart tests] ===== 购物车模型测试套件开始 =====
+[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_cartinfo_creation
+[df_cart tests] 结果: 购物车记录创建成功
+.[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_cartinfo_str_representation
+[df_cart tests] 结果: 购物车字符串表示正确
+.[df_cart tests] ===== 购物车模型测试套件结束 =====
+[df_cart tests] ===== 购物车视图测试套件开始 =====
+[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_add_to_cart_existing_item
+[df_cart tests] 结果: 已存在商品数量正确累加
+.[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_add_to_cart_new_item
+[df_cart tests] 结果: 新商品添加到购物车成功
+.[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_delete_cart_success
+[df_cart tests] 结果: 购物车商品删除成功
+.[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_edit_cart_success
+[df_cart tests] 结果: 购物车商品数量编辑成功
+.[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_user_cart_page_ok_when_logged_in
+[df_cart tests] 结果: 登录用户购物车页可访问, 显示商品列表
+.[df_cart tests] setUp: 创建测试数据 ...
+[df_cart tests] 开始: test_user_cart_page_redirects_when_not_logged_in
+[df_cart tests] 结果: 未登录访问购物车被重定向到登录页
+.[df_cart tests] ===== 购物车视图测试套件结束 =====
+..................[df_goods tests] ===== 商品模型测试套件开始 =====
+[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_goodsinfo_creation
+[df_goods tests] 结果: 商品信息创建成功
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_goodsinfo_str_representation
+[df_goods tests] 结果: 商品字符串表示正确
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_sample_image_uses_static_url
+[df_goods tests] 结果: 示例商品图片使用静态资源路径
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_typeinfo_creation
+[df_goods tests] 结果: 商品分类创建成功
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_typeinfo_str_representation
+[df_goods tests] 结果: 分类字符串表示正确
+.[df_goods tests] ===== 商品模型测试套件结束 =====
+[df_goods tests] ===== 商品分页测试套件开始 =====
+[df_goods tests] setUp: 创建分页测试数据 ...
+[df_goods tests] 开始: test_good_list_pagination_first_page
+[df_goods tests] 结果: 第一页分页正确
+.[df_goods tests] setUp: 创建分页测试数据 ...
+[df_goods tests] 开始: test_good_list_pagination_second_page
+[df_goods tests] 结果: 第二页分页正确
+.[df_goods tests] setUp: 创建分页测试数据 ...
+[df_goods tests] 开始: test_search_pagination
+[df_goods tests] 结果: 搜索分页功能正常
+.[df_goods tests] ===== 商品分页测试套件结束 =====
+[df_goods tests] ===== 商品视图测试套件开始 =====
+[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_cart_count_function
+[df_goods tests] 结果: 购物车计数函数正确
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_good_detail_page_ok
+[df_goods tests] 结果: 商品详情页可访问, 点击量正确增加
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_good_detail_with_login_user_browser_record
+[df_goods tests] 结果: 登录用户浏览记录创建成功
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_good_list_page_ok
+[df_goods tests] 结果: 商品列表页可访问, 分类信息正确
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_good_list_sort_by_click
+[df_goods tests] 结果: 按点击量排序功能正常
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_good_list_sort_by_price
+[df_goods tests] 结果: 按价格排序功能正常
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_index_only_renders_populated_categories_with_valid_links
+[df_goods tests] 结果: 首页仅显示有商品分类，商品链接有效
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_index_page_ok
+[df_goods tests] 结果: 首页可访问, 模板正确
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_index_page_with_login_user
+[df_goods tests] 结果: 登录用户首页显示购物车数量正确
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_ordinary_search_no_results
+[df_goods tests] 结果: 搜索无结果时显示推荐商品
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_ordinary_search_with_login_user
+[df_goods tests] 结果: 登录用户搜索页显示购物车状态正确
+.[df_goods tests] setUp: 创建测试数据 ...
+[df_goods tests] 开始: test_ordinary_search_with_results
+[df_goods tests] 结果: 搜索有结果时状态正确
+.[df_goods tests] ===== 商品视图测试套件结束 =====
+[df_order tests] ===== 订单模型测试套件开始 =====
+[df_order tests] setUp: 创建测试数据 ...
+[df_order tests] 开始: test_orderdetailinfo_creation
+[df_order tests] 结果: 订单详情创建成功
+.[df_order tests] setUp: 创建测试数据 ...
+[df_order tests] 开始: test_orderinfo_creation
+[df_order tests] 结果: 订单信息创建成功
+.[df_order tests] ===== 订单模型测试套件结束 =====
+[df_order tests] ===== 订单视图测试套件开始 =====
+[df_order tests] setUp: 创建测试数据 ...
+[df_order tests] 开始: test_order_handle_insufficient_stock
+[df_order tests] 结果: 库存不足时订单提交失败, 数据回滚正确
+.[df_order tests] setUp: 创建测试数据 ...
+[df_order tests] 开始: test_order_handle_success
+[df_order tests] 结果: 订单提交成功, 库存正确减少, 购物车被清空
+.[df_order tests] setUp: 创建测试数据 ...
+[df_order tests] 开始: test_order_page_ok_when_logged_in
+[df_order tests] 结果: 登录用户订单页可访问, 显示购物车商品和价格
+.[df_order tests] setUp: 创建测试数据 ...
+[df_order tests] 开始: test_order_page_redirects_when_not_logged_in
+[df_order tests] 结果: 未登录访问订单页被重定向到登录页
+.[df_order tests] ===== 订单视图测试套件结束 =====
+.................[df_user tests] ===== 测试套件开始 =====
+[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_info_page_ok_when_logged_in
+[df_user tests] 结果: 已登录访问 info -> 200 且模板正确, user_name 匹配
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_login_handle_success_redirect_and_cookie
+[df_user tests] 结果: 登录成功 -> 302 跳转 /, 设置 cookie uname=alice
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_login_page_ok
+[df_user tests] 结果: 登录页可访问, 使用模板 df_user/login.html
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_login_required_decorator_redirects_when_not_logged_in
+[df_user tests] 结果: 未登录访问 info -> 302 跳转到 /user/login/
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_register_exist_json
+[df_user tests] 检查已存在用户名 -> count=1
+[df_user tests] 检查不存在用户名 -> count=0
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_register_handle_password_mismatch_redirect
+[df_user tests] 结果: 密码不一致 -> 302 跳转到 /user/register/
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_register_handle_success_render_login
+[df_user tests] 结果: 注册成功 -> 渲染登录页, context.username=charlie
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_register_page_ok
+[df_user tests] 结果: 注册页可访问, 使用模板 df_user/register.html
+.[df_user tests] setUp: 创建初始用户数据 ...
+[df_user tests] 开始: test_site_update_profile_post
+[df_user tests] 结果: POST 更新地址成功, 字段已正确持久化
+.[df_user tests] ===== 测试套件结束 =====
+
+----------------------------------------------------------------------
+Ran 78 tests in 0.883s
+
+OK
+Destroying test database for alias 'default'...
