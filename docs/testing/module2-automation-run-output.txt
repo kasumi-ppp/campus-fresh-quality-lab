@@ -1,0 +1,108 @@
+校园鲜达模块二 AI 生成自动化测试运行记录
+执行时间：2026-09-19
+执行人：成员 C
+命令：python manage.py test apps.df_user.tests_ai_generated apps.df_order.tests_ai_generated apps.df_cart.tests_ai_generated -v 2
+
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles, tinymce
+  Apply all migrations: admin, auth, contenttypes, df_cart, df_goods, df_order, df_user, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying df_user.0001_initial... OK
+  Applying df_user.0002_auto_20180607_2151... OK
+  Applying df_goods.0001_initial... OK
+  Applying df_cart.0001_initial... OK
+  Applying df_cart.0002_auto_20181218_1200... OK
+  Applying df_cart.0003_auto_20190427_2158... OK
+  Applying df_goods.0002_auto_20181218_1200... OK
+  Applying df_goods.0003_auto_20190427_2158... OK
+  Applying df_goods.0004_auto_20250913_1156... OK
+  Applying df_order.0001_initial... OK
+  Applying df_order.0002_auto_20181218_1200... OK
+  Applying df_user.0003_goodsbrowser... OK
+  Applying df_user.0004_auto_20181218_1200... OK
+  Applying df_user.0005_goodsbrowser_browser_time... OK
+  Applying df_user.0006_auto_20190427_2158... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_external_cookie_url_is_not_followed (apps.df_user.tests_ai_generated.AiLoginRedirectTests)
+C-AI-SEC-001：外站回跳地址必须被拒绝。 ... ok
+test_protocol_relative_cookie_url_is_not_followed (apps.df_user.tests_ai_generated.AiLoginRedirectTests)
+C-AI-SEC-001：协议相对地址（//evil.com）同样拒绝。 ... ok
+test_site_relative_cookie_url_still_works (apps.df_user.tests_ai_generated.AiLoginRedirectTests)
+C-AI-SEC-001：合法站内路径（如 /cart/）回跳不受影响。 ... ok
+test_order_rejected_when_category_deleted (apps.df_order.tests_ai_generated.AiInventoryTests)
+C-AI-INV-005：商品所属分类被逻辑删除后下单。 ... ok
+test_partial_failure_rolls_back_entire_order (apps.df_order.tests_ai_generated.AiInventoryTests)
+C-AI-INV-002：两件商品一件够买一件不够买。 ... ok
+test_second_order_validates_against_deducted_stock (apps.df_order.tests_ai_generated.AiInventoryTests)
+C-AI-INV-004：下单成功后再次购买同一商品。 ... ok
+test_stock_exactly_reaches_zero_not_negative (apps.df_order.tests_ai_generated.AiInventoryTests)
+C-AI-INV-001：库存恰好等于购买数量（边界内侧）。 ... ok
+test_two_buyers_cannot_exceed_stock (apps.df_order.tests_ai_generated.AiInventoryTests)
+C-AI-INV-003：两位买家争购低库存商品。 ... ok
+test_decimal_amount_no_float_drift (apps.df_order.tests_ai_generated.AiOrderAmountTests)
+C-AI-ORD-001：小数单价乘数量后总额必须精确。 ... ok
+test_consecutive_orders_have_unique_nonempty_ids (apps.df_order.tests_ai_generated.AiOrderLifecycleTests)
+C-AI-ORD-002：同一用户连续下两单。 ... ok
+test_malformed_cart_ids_return_readable_error (apps.df_order.tests_ai_generated.AiOrderLifecycleTests)
+C-AI-ORD-004：cart_ids 为字母、纯逗号、空白等无效输入。 ... ok
+test_mixed_owner_cart_ids_rejected_as_a_whole (apps.df_order.tests_ai_generated.AiOrderLifecycleTests)
+C-AI-ORD-007：提交列表混入他人条目。 ... ok
+test_order_without_address_is_rejected_and_cart_kept (apps.df_order.tests_ai_generated.AiOrderLifecycleTests)
+C-AI-ORD-006：地址为空时下单。 ... ok
+test_price_change_does_not_touch_historical_order (apps.df_order.tests_ai_generated.AiOrderLifecycleTests)
+C-AI-ORD-005：下单后商品调价。 ... ok
+test_resubmit_of_settled_cart_creates_no_second_order (apps.df_order.tests_ai_generated.AiOrderLifecycleTests)
+C-AI-ORD-003：同一条目重复提交。 ... ok
+test_pay_other_users_order_is_rejected (apps.df_order.tests_ai_generated.AiPayTests)
+C-AI-ORD-009：支付他人订单必须被拒绝（所有者校验）。 ... ok
+test_pay_own_order_flips_status_exactly_once (apps.df_order.tests_ai_generated.AiPayTests)
+C-AI-ORD-008：本人订单演示支付成功且状态只流转一次。 ... ok
+test_add_count_exactly_equal_to_stock_succeeds (apps.df_cart.tests_ai_generated.AiCartBoundaryTests)
+C-AI-CART-002：数量恰好等于库存（边界内侧）。 ... ok
+test_edit_above_stock_rejected_and_keeps_saved_value (apps.df_cart.tests_ai_generated.AiCartBoundaryTests)
+C-AI-CART-005：修改数量为库存 + 1（边界外侧）。 ... ok
+test_add_extreme_nonexistent_goods_id (apps.df_cart.tests_ai_generated.AiCartInvalidInputTests)
+C-AI-CART-003：极大商品编号（远超正常主键范围）加购。 ... ok
+test_url_invalid_count_format_returns_404_without_dirty_data (apps.df_cart.tests_ai_generated.AiCartInvalidInputTests)
+C-AI-CART-001：URL 中数量为字母或小数属于无效等价类。 ... ok
+test_anonymous_edit_and_delete_redirect_to_login (apps.df_cart.tests_ai_generated.AiCartScenarioTests)
+C-AI-CART-006：未登录直接调用修改/删除接口。 ... ok
+test_readd_after_delete_starts_fresh_count (apps.df_cart.tests_ai_generated.AiCartScenarioTests)
+C-AI-CART-004：删除条目后重新加购同一商品。 ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 0.294s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+
+======== 全量回归（含模块一既有测试）========
+命令：python manage.py test
+
+----------------------------------------------------------------------
+Ran 101 tests in 0.922s
+
+OK
+Destroying test database for alias 'default'...

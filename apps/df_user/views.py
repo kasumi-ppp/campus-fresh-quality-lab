@@ -59,6 +59,18 @@ def login(request):
     return render(request, 'df_user/login.html', context)
 
 
+def _safe_redirect_url(raw_url):
+    """登录后回跳地址只允许站内相对路径。
+
+    url Cookie 存放在用户浏览器端、可被任意篡改（AI 审查发现 AI-21），
+    直接重定向到 Cookie 值会构成开放重定向漏洞（钓鱼跳转）。
+    以“/”开头且非“//”开头的值视为站内路径，其余一律回退到首页。
+    """
+    if isinstance(raw_url, str) and raw_url.startswith('/') and not raw_url.startswith('//'):
+        return raw_url
+    return '/'
+
+
 def login_handle(request):  # 没有利用ajax提交表单
     # 接受请求信息
     uname = request.POST.get('username')
@@ -69,7 +81,7 @@ def login_handle(request):  # 没有利用ajax提交表单
         s1 = sha1()
         s1.update(upwd.encode('utf8'))
         if s1.hexdigest() == users[0].upwd:
-            url = request.COOKIES.get('url', '/')
+            url = _safe_redirect_url(request.COOKIES.get('url', '/'))
             red = HttpResponseRedirect(url)  # 继承与HttpResponse 在跳转的同时 设置一个cookie值
             # 是否勾选记住用户名，设置cookie
             if jizhu != 0:

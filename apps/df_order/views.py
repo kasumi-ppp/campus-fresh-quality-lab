@@ -98,6 +98,10 @@ def order_handle(request):
             carts = []
             seen = set()
             for raw_id in cart_ids.split(','):
+                raw_id = raw_id.strip()
+                if not raw_id:
+                    # 容忍尾逗号等格式产生的空片段（AI 审查建议 AI-12），不视为非法输入
+                    continue
                 cart_id = _parse_cart_id(raw_id)
                 if cart_id is None:
                     raise OrderSubmitError('购物车条目编号无效，请重新选择商品')
@@ -163,5 +167,17 @@ def order_handle(request):
 
 
 @user_decorator.login
-def pay(request):
-    pass
+def pay(request, oid):
+    """演示支付：将本人订单标记为已支付（C-ORD-012）。
+
+    仅作演示用途，不接入真实支付平台；只允许订单所有者操作，
+    用查询集更新以绕开 odate 的 auto_now 副作用（AI 审查发现 AI-16/AI-23）。
+    """
+    uid = request.session['user_id']
+    updated = OrderInfo.objects.filter(oid=oid, user_id=uid, oIsPay=False).update(oIsPay=True)
+    if updated == 0:
+        order = OrderInfo.objects.filter(oid=oid, user_id=uid).first()
+        if order is None:
+            return JsonResponse({'ok': 0, 'msg': '订单不存在或不属于当前用户'})
+        return JsonResponse({'ok': 0, 'msg': '该订单已支付，请勿重复支付'})
+    return JsonResponse({'ok': 1, 'msg': '支付成功（演示环境，未发生真实支付）'})

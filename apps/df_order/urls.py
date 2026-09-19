@@ -7,4 +7,5 @@ app_name = "df_order"
 urlpatterns = [
     re_path(r"^$", views.order, name="order"),
     re_path(r"^push/$", views.order_handle, name="push"),
+    re_path(r"^pay/(\w+)/$", views.pay, name="pay"),
 ]

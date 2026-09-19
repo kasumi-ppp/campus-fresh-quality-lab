@@ -66,6 +66,13 @@ python manage.py runserver
 
 `--strict` 只有在至少 30 条用例完成成员填写并执行后才会通过。
 
+## 模块二测试资料（AI 辅助测试）
+
+- [AI 生成测试用例清单](docs/testing/module2-ai-test-case-matrix.xlsx)：21 条，由 AI 依据成员 C 需求文档生成、成员 C 审核并自动化执行。
+- [AI 实践过程与对照实验记录](docs/ai-records/2026-09-19-member-c-ai-testing.md)：AI 独立审查基线代码与人工测试的对照结论，AI 发现缺陷 D-AI-01（登录回跳开放重定向）、D-AI-02（支付视图空壳）的修复与回归。
+- [运行方式说明](docs/testing/module2-README.md)：环境准备与一键运行命令。
+- 自动化运行记录：`docs/testing/module2-automation-run-output.txt`（23 条 AI 测试 + 全量回归 101 条，均通过）。
+
 ## 业务范围
 
 - 用户、登录和收货信息
