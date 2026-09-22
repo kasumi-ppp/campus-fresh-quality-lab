@@ -7,7 +7,7 @@
 | 负责人 | 成员 C |
 | 日期 | 2026-09-19 |
 | 方案 | 课程模块二方案 2「AI 测」：用 AI 工具辅助测试模块一系统 |
-| AI 工具 | ZCode 智能体（底层模型 GLM），本地命令行环境，可读写仓库、执行 shell 命令 |
+| AI 工具 | ZCode 智能体（底层模型 DeepSeek），本地命令行环境，可读写仓库、执行 shell 命令 |
 | 被测范围 | 购物车、订单、库存一致性模块（成员 C 分工范围），另含 1 项跨模块安全缺陷 |
 | 产出物 | `docs/testing/module2-ai-test-case-matrix.xlsx`（21 条 AI 生成用例）、`apps/df_cart/tests_ai_generated.py`、`apps/df_order/tests_ai_generated.py`、`apps/df_user/tests_ai_generated.py`（AI 生成自动化脚本，共 23 个测试）、AI 对照实验记录（本文件第 4 节） |
 

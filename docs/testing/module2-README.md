@@ -46,6 +46,6 @@ python manage.py test
 
 ## 5. 生成过程声明
 
-21 条用例与三个测试文件由 AI 工具（ZCode 智能体，GLM 模型）依据
+21 条用例与三个测试文件由 AI 工具（ZCode 智能体，DeepSeek 模型）依据
 `docs/requirements/member-c-cart-order-requirements.md` 生成，成员 C 逐条审核、
 修正并真实执行。生成与审核过程记录见 `docs/ai-records/2026-09-19-member-c-ai-testing.md`。
