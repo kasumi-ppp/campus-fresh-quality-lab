@@ -50,6 +50,14 @@ python manage.py runserver
 
 命令可以重复执行而不会重复创建同名商品。需要重新生成这组演示商品时可使用 `--reset`；该参数只处理本命令生成的商品，并保留其他业务数据。加载完成后刷新首页即可看到商品分类和商品卡片。
 
+人工测试需要的脱敏账号和收货地址可单独加载：
+
+```powershell
+.\.venv\Scripts\python.exe manage.py load_demo_users
+```
+
+该命令幂等创建或更新 `test01`～`test12` 共 12 个脱敏账号，密码均为 `123456`，不会导入往届账号或订单数据。
+
 ## 模块一测试资料
 
 - [人工测试用例记录表](docs/testing/module1-manual-test-case-matrix.xlsx)：36 条覆盖编号，执行字段由三位成员亲自补写和执行。
@@ -65,6 +73,15 @@ python manage.py runserver
 ```
 
 `--strict` 只有在至少 30 条用例完成成员填写并执行后才会通过。
+
+截图或录屏路径回填到 Excel 后，可进一步检查已执行用例引用的媒体文件：
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_manual_evidence.py
+.\.venv\Scripts\python.exe scripts/check_manual_evidence.py --strict
+```
+
+证据检查会确认路径位于 `docs/testing/evidence/` 内、文件确实存在且扩展名属于支持的图片或视频格式；它不能替代成员本人对截图内容和操作真实性的核对。
 
 ## 模块二测试资料（AI 辅助测试）
 
