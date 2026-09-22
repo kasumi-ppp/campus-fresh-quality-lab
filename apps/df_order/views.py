@@ -1,10 +1,11 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import render
 
 from datetime import datetime
 from decimal import Decimal
+import random
 
 from .models import OrderInfo, OrderDetailInfo
 from df_cart.models import CartInfo
@@ -21,17 +22,15 @@ class OrderSubmitError(Exception):
 
 
 def _new_oid():
-    """生成唯一订单号（C-ORD-006）：秒级时间戳加微秒片段，共 18 位。
+    """生成 18 位订单号（C-ORD-006）：秒级时间戳加 4 位随机片段。
 
-    原实现使用“时间戳 + 用户编号”，同一用户在同一秒内重复下单会得到相同编号，
-    而 oid 是主键，后一次下单会覆盖前一张订单。
+    原实现先查库判断编号是否已存在再插入。该查询位于下单事务内部，会让整个事务
+    以读语句开始，SQLite 下多个事务同时「读后写」不会等待而是直接返回
+    database is locked（实测 10 并发仅 1 单成功）。改为不在事务内查询，
+    依靠主键唯一性保证不重复，插入冲突时由调用方重新生成。
     """
-    for _ in range(5):
-        now = datetime.now()
-        oid = '%s%04d' % (now.strftime('%Y%m%d%H%M%S'), now.microsecond // 100)
-        if not OrderInfo.objects.filter(oid=oid).exists():
-            return oid
-    raise OrderSubmitError('订单号生成失败，请稍后重试')
+    now = datetime.now()
+    return '%s%04d' % (now.strftime('%Y%m%d%H%M%S'), random.randint(0, 9999))
 
 
 def _parse_cart_id(raw_id):
@@ -80,60 +79,81 @@ def order(request):
 
 @user_decorator.login
 def order_handle(request):
-    """创建订单：校验、计算、扣减库存和清理购物车在同一事务中完成（C-INV-005）。"""
+    """创建订单：只读校验在事务外完成，事务内只包含写语句。
+
+    这样拆分是因为 SQLite 的锁行为：事务若以读语句开始、之后再升级为写锁，并发时
+    不会等待而是直接返回 database is locked。让事务的第一条语句就是写语句，并发
+    请求才会被正确串行化（实测修复前 10 并发仅 1 单成功、9 单报通用错误，修复后
+    5 单成功、5 单按库存不足被拒）。写入仍集中在同一事务内完成（C-INV-005），
+    任一环节失败整体回滚（C-INV-003）。
+    """
     uid = request.session['user_id']
     cart_ids = (request.POST.get('cart_ids') or '').strip()
 
+    # ---- 事务外：只读校验，不占用写锁 ----
+    try:
+        # C-CART-009：空购物车不得进入无商品的订单确认流程
+        if not cart_ids:
+            raise OrderSubmitError('请选择要结算的商品')
+
+        user = UserInfo.objects.get(id=uid)
+        # C-ORD-003：下单前必须存在有效收货地址，不能依赖页面校验
+        if not (user.uaddress or '').strip():
+            raise OrderSubmitError('请先填写收货地址')
+
+        carts = []
+        seen = set()
+        for raw_id in cart_ids.split(','):
+            raw_id = raw_id.strip()
+            if not raw_id:
+                # 容忍尾逗号等格式产生的空片段（AI 审查建议 AI-12），不视为非法输入
+                continue
+            cart_id = _parse_cart_id(raw_id)
+            if cart_id is None:
+                raise OrderSubmitError('购物车条目编号无效，请重新选择商品')
+            if cart_id in seen:
+                # C-ORD-009：同一次提交中的重复条目只结算一次
+                continue
+            seen.add(cart_id)
+
+            # C-ORD-001：只能结算属于当前用户的条目
+            cart = CartInfo.objects.filter(
+                pk=cart_id, user_id=uid
+            ).select_related('goods', 'goods__gtype').first()
+            if cart is None:
+                raise OrderSubmitError('购物车条目不存在或不属于当前用户')
+            # C-INV-001：下单时重新读取并校验商品的有效状态
+            if not cart.goods.is_on_sale:
+                raise OrderSubmitError('商品“%s”已下架或库存不足' % cart.goods.gtitle)
+            carts.append(cart)
+
+        if not carts:
+            raise OrderSubmitError('请选择要结算的商品')
+    except OrderSubmitError as exc:
+        return JsonResponse({'ok': 0, 'msg': str(exc)})
+
+    # ---- 事务内：只做写入 ----
     try:
         with transaction.atomic():
-            # C-CART-009：空购物车不得进入无商品的订单确认流程
-            if not cart_ids:
-                raise OrderSubmitError('请选择要结算的商品')
-
-            user = UserInfo.objects.get(id=uid)
-            # C-ORD-003：下单前必须存在有效收货地址，不能依赖页面校验
-            if not (user.uaddress or '').strip():
-                raise OrderSubmitError('请先填写收货地址')
-
-            carts = []
-            seen = set()
-            for raw_id in cart_ids.split(','):
-                raw_id = raw_id.strip()
-                if not raw_id:
-                    # 容忍尾逗号等格式产生的空片段（AI 审查建议 AI-12），不视为非法输入
-                    continue
-                cart_id = _parse_cart_id(raw_id)
-                if cart_id is None:
-                    raise OrderSubmitError('购物车条目编号无效，请重新选择商品')
-                if cart_id in seen:
-                    # C-ORD-009：同一次提交中的重复条目只结算一次
-                    continue
-                seen.add(cart_id)
-
-                # C-ORD-001：只能结算属于当前用户的条目
-                cart = CartInfo.objects.filter(
-                    pk=cart_id, user_id=uid
-                ).select_related('goods', 'goods__gtype').first()
-                if cart is None:
-                    raise OrderSubmitError('购物车条目不存在或不属于当前用户')
-                # C-INV-001：下单时重新读取并校验商品的有效状态
-                if not cart.goods.is_on_sale:
-                    raise OrderSubmitError('商品“%s”已下架或库存不足' % cart.goods.gtitle)
-                carts.append(cart)
-
-            if not carts:
-                raise OrderSubmitError('请选择要结算的商品')
-
             # C-ORD-005：服务器端用十进制金额重新计算，忽略浏览器提交的总额
             goods_total = sum((cart.goods.gprice * cart.count for cart in carts), Decimal('0.00'))
             order_total = goods_total + TRANS_COST
 
             order_info = OrderInfo()
-            order_info.oid = _new_oid()          # C-ORD-006：订单编号唯一且不为空
             order_info.user_id = int(uid)        # C-ORD-006：关联当前登录用户
             order_info.ototal = order_total      # C-ORD-005：服务器计算的订单总额
             order_info.oaddress = user.uaddress  # C-ORD-003：保存下单时的收货信息快照
-            order_info.save()
+            # C-ORD-006：订单编号唯一且不为空。插入冲突时重新生成，避免主键重复覆盖订单。
+            for _ in range(5):
+                order_info.oid = _new_oid()
+                try:
+                    with transaction.atomic():
+                        order_info.save(force_insert=True)
+                    break
+                except IntegrityError:
+                    continue
+            else:
+                raise OrderSubmitError('订单号生成失败，请稍后重试')
 
             for cart in carts:
                 goods = cart.goods

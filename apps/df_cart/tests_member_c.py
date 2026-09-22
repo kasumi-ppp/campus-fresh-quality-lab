@@ -6,6 +6,7 @@
 # 本文件由成员 C 独立编写，针对购物车模块的权限隔离、数量校验和商品有效性。
 from decimal import Decimal
 
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
 
@@ -231,3 +232,29 @@ class CartErrorResponseTests(CartTestBase):
         self.assertEqual(data["ok"], 0)
         self.assertTrue(data["msg"])
         self.assertNotIn("Traceback", resp.content.decode())
+
+
+
+class CartUniqueConstraintTests(CartTestBase):
+    """AI-17 并发加固：同一用户与同一商品的条目必须唯一。
+
+    修复前：并发加购实测 5 轮全部异常（丢失数量更新或产生重复条目）。
+    并发场景由独立压测脚本验证，此处守护模型层唯一约束这一兜底防线。
+    """
+
+    def test_unique_constraint_blocks_duplicate_entries(self):
+        CartInfo.objects.create(user=self.owner, goods=self.goods, count=1)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                CartInfo.objects.create(user=self.owner, goods=self.goods, count=2)
+
+        self.assertEqual(
+            CartInfo.objects.filter(user=self.owner, goods=self.goods).count(), 1)
+
+    def test_different_users_may_hold_same_goods(self):
+        """约束只针对同一用户，不同用户购买同一商品不受影响。"""
+        CartInfo.objects.create(user=self.owner, goods=self.goods, count=1)
+        CartInfo.objects.create(user=self.other, goods=self.goods, count=1)
+
+        self.assertEqual(CartInfo.objects.filter(goods=self.goods).count(), 2)

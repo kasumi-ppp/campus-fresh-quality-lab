@@ -1,9 +1,18 @@
+from django.db import IntegrityError, transaction
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, reverse
 
 from .models import CartInfo
 from df_goods.models import GoodsInfo
 from df_user import user_decorator
+
+
+class CartLimitExceeded(Exception):
+    """累加后的数量超过库存（C-CART-004），用于回滚本次加购。"""
+
+    def __init__(self, gkucun):
+        self.gkucun = gkucun
 
 
 def _cart_entry_count(uid):
@@ -50,19 +59,31 @@ def add(request, gid, count):
         return _fail('商品“%s”已下架或暂时缺货，无法加入购物车' % goods.gtitle,
                      count=_cart_entry_count(uid))
 
-    # C-CART-003：同一用户的同一商品只保留一个条目，重复加入时累加数量
-    cart = CartInfo.objects.filter(user_id=uid, goods_id=gid).first()
-    target = count if cart is None else cart.count + count
-    # C-CART-004：累加后的数量不得超过商品当前可售库存
-    if target > goods.gkucun:
-        return _fail('购买数量超过库存，当前库存 %d' % goods.gkucun,
+    # C-CART-003：同一用户的同一商品只保留一个条目，重复加入时累加数量。
+    # 并发加固（AI-17）：原实现「先查条目、再算数量、后写回」不是原子操作，
+    # 并发加购会产生重复条目或丢失数量更新（实测 10 并发 5 轮全部异常）。
+    # 改为由数据库端累加，并以 (user, goods) 唯一约束兜底。
+    try:
+        with transaction.atomic():
+            updated = CartInfo.objects.filter(
+                user_id=uid, goods_id=gid
+            ).update(count=F('count') + count)
+            if updated == 0:
+                try:
+                    with transaction.atomic():
+                        CartInfo.objects.create(user_id=uid, goods_id=gid, count=count)
+                except IntegrityError:
+                    # 并发插入被唯一约束拦下，改为在已存在的条目上累加
+                    CartInfo.objects.filter(
+                        user_id=uid, goods_id=gid
+                    ).update(count=F('count') + count)
+            cart = CartInfo.objects.filter(user_id=uid, goods_id=gid).first()
+            # C-CART-004：累加后的数量不得超过商品当前可售库存
+            if cart is not None and cart.count > goods.gkucun:
+                raise CartLimitExceeded(goods.gkucun)
+    except CartLimitExceeded as exc:
+        return _fail('购买数量超过库存，当前库存 %d' % exc.gkucun,
                      count=_cart_entry_count(uid))
-
-    if cart is None:
-        cart = CartInfo(user_id=uid, goods_id=gid, count=target)
-    else:
-        cart.count = target
-    cart.save()
 
     # 如果是ajax提交则直接返回json，否则转向购物车
     if request.headers.get("x-requested-with") == "XMLHttpRequest":

@@ -19,6 +19,12 @@ class CartInfo(models.Model):
     class Meta:
         verbose_name = "购物车"
         verbose_name_plural = verbose_name
+        # C-CART-003：同一用户与同一商品只保留一个条目。
+        # 原实现只在视图层「先查后插」，并发加购会产生重复条目或丢失数量更新
+        # （AI 审查发现 AI-17），这里补上数据库唯一约束兜底。
+        constraints = [
+            models.UniqueConstraint(fields=["user", "goods"], name="uniq_cart_user_goods"),
+        ]
 
     def __str__(self):
         return self.user.uname + '的购物车'
